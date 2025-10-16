@@ -6,6 +6,5 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public record JsonRpcRequestT<R>(
-	@JsonProperty("params") @Nullable @JsonInclude(Include.NON_NULL) R params
-) {
+		@JsonProperty("params") @Nullable @JsonInclude(Include.NON_NULL) R params) {
 }
