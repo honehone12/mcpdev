@@ -13,6 +13,7 @@ import com.mcpdev.mcpdev.service.McpService;
 @RequestMapping("/api")
 public class McpController {
     private static final int MAX_PAYLOAD = 4096;
+
     private final Logger _log = LoggerFactory.getLogger(McpController.class);
     private final McpService _mcpService;
 
@@ -27,6 +28,6 @@ public class McpController {
             throw new BadRequestException();
         }
 
-        return _mcpService.run(raw);
+        return _mcpService.handle(raw);
     }
 }
