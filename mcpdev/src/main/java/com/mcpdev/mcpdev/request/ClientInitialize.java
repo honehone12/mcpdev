@@ -1,4 +1,4 @@
-package com.mcpdev.mcpdev.model;
+package com.mcpdev.mcpdev.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

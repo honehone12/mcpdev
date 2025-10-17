@@ -1,6 +1,8 @@
-package com.mcpdev.mcpdev.model;
+package com.mcpdev.mcpdev.response;
 
 import java.util.Map;
+
+import com.mcpdev.mcpdev.response.Tool.InputSchema;
 
 public class Tools {
 	public static Tool[] getDefault() {
@@ -17,7 +19,7 @@ public class Tools {
 												"keywords for text search"),
 										"itemType", new Tool.Property(
 												"string",
-												"item type for search; all|anime|character|trailer")),
+												"item type for search; anime|character")),
 								new String[] { "keywords" })),
 				new Tool(
 						"vectorSearch",
@@ -32,7 +34,7 @@ public class Tools {
 										"itemType", new Tool.Property(
 												"string",
 												"item type for search; anime|character")),
-								new String[] { "id" }))
+								new String[] { "id", "itemType" }))
 		};
 	}
 }
