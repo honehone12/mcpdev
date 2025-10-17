@@ -1,7 +1,6 @@
 package com.mcpdev.mcpdev.response;
 
 import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record Tool(

@@ -2,8 +2,6 @@ package com.mcpdev.mcpdev.response;
 
 import java.util.Map;
 
-import com.mcpdev.mcpdev.response.Tool.InputSchema;
-
 public class Tools {
 	public static Tool[] getDefault() {
 		return new Tool[] {

@@ -5,9 +5,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
-import com.mcpdev.mcpdev.model.ClientInitialize;
-import com.mcpdev.mcpdev.model.ServerInitialize;
-import com.mcpdev.mcpdev.model.Tools;
+import com.mcpdev.mcpdev.request.Call;
+import com.mcpdev.mcpdev.request.ClientInitialize;
+import com.mcpdev.mcpdev.response.ServerInitialize;
+import com.mcpdev.mcpdev.response.Tools;
 
 @Service
 public class McpService extends JsonRpcService {
@@ -21,7 +22,7 @@ public class McpService extends JsonRpcService {
 
     private void validateMcp(String protocolVersion)
             throws BadRequestException {
-        if (!protocolVersion.equals(SUPPORTED_MCP)) {
+        if (!SUPPORTED_MCP.equals(protocolVersion)) {
             _log.warn("unsupported protocol version {}", protocolVersion);
             throw new BadRequestException();
         }
@@ -38,6 +39,8 @@ public class McpService extends JsonRpcService {
                 return CompletableFuture.completedFuture(Ok());
             case "tools/list":
                 return handleToolsList(req.id());
+            case "tools/call":
+                return handleToolsCall(req.id(), raw);
             default:
                 _log.warn("unknown method {}", req.method());
                 throw new BadRequestException();
@@ -48,9 +51,17 @@ public class McpService extends JsonRpcService {
     private CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
             throws BadRequestException, InternalServerException {
         final var clientIni = deserializeT(rawReq, ClientInitialize.class);
+        if (clientIni == null) {
+            throw new BadRequestException();
+        }
+
         validateMcp(clientIni.protoclVersion());
         final var info = clientIni.clientInfo();
-        _log.info("initialize {}, {}, {}", info.name(), info.title(), info.version());
+        if (info == null) {
+            throw new BadRequestException();
+        }
+        // all those properties can be null actually
+        _log.info("[initialize] {}, {}, {}", info.name(), info.title(), info.version());
 
         final var serverIni = ServerInitialize.getDefault(SUPPORTED_MCP);
         final var rawRes = serializeResponse(id, serverIni, null);
@@ -63,5 +74,19 @@ public class McpService extends JsonRpcService {
         final var tools = Tools.getDefault();
         final var rawRes = serializeResponse(id, tools, null);
         return CompletableFuture.completedFuture(rawRes);
+    }
+
+    @Async
+    private CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
+            throws BadRequestException, InternalServerException {
+        final var call = deserializeT(rawReq, Call.class);
+        if (call == null) {
+            throw new BadRequestException();
+        }
+
+        final var query = call.arguments();
+        if (query == null) {
+            throw new BadRequestException();
+        }
     }
 }

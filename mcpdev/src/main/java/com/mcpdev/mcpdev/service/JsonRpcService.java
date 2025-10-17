@@ -29,7 +29,7 @@ public class JsonRpcService {
 
     private void validateJsonRpc(JsonRpcRequest req)
             throws BadRequestException {
-        if (!req.jsonrpc().equals(SUPPORTED_JSON_RPC)) {
+        if (!SUPPORTED_JSON_RPC.equals(req.jsonrpc())) {
             _log.warn("unsupported jsonrpc {}", req.jsonrpc());
             throw new BadRequestException();
         }
