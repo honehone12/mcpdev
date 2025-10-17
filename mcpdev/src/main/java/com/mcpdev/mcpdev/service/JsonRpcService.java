@@ -18,7 +18,6 @@ import com.mcpdev.mcpdev.response.JsonRpcResponse;
 @Service
 public class JsonRpcService {
     protected static final String SUPPORTED_JSON_RPC = "2.0";
-    protected static final byte[] OK = "{\"jsonrpc\": \"2.0\"}".getBytes(StandardCharsets.UTF_8);
 
     protected final Logger _log = LoggerFactory.getLogger(this.getClass());
     protected final ObjectMapper _serializer = new ObjectMapper();
@@ -62,6 +61,10 @@ public class JsonRpcService {
             _log.warn(e.toString());
             throw new InternalServerException();
         }
+    }
+
+    protected byte[] Ok() {
+        return "{\"jsonrpc\": \"2.0\"}".getBytes(StandardCharsets.UTF_8);
     }
 
     protected <R, E> byte[] serializeResponse(long id, R result, @Nullable E error)

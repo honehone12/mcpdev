@@ -1,6 +1,5 @@
 package com.mcpdev.mcpdev.service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -8,6 +7,7 @@ import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.model.ClientInitialize;
 import com.mcpdev.mcpdev.model.ServerInitialize;
+import com.mcpdev.mcpdev.model.Tools;
 
 @Service
 public class McpService extends JsonRpcService {
@@ -35,7 +35,7 @@ public class McpService extends JsonRpcService {
             case "initialize":
                 return handleInitialize(req.id(), raw);
             case "notifications/initialized":
-                return CompletableFuture.completedFuture(OK);
+                return CompletableFuture.completedFuture(Ok());
             case "tools/list":
                 return handleToolsList(req.id());
             default:
@@ -58,7 +58,11 @@ public class McpService extends JsonRpcService {
         return CompletableFuture.completedFuture(rawRes);
     }
 
-    private CompletableFuture<byte[]> handleToolsList(long id) {
-
+    @Async
+    private CompletableFuture<byte[]> handleToolsList(long id)
+            throws InternalServerException {
+        final var tools = Tools.getDefault();
+        final var rawRes = serializeResponse(id, tools, null);
+        return CompletableFuture.completedFuture(rawRes);
     }
 }
