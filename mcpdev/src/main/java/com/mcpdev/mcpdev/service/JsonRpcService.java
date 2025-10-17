@@ -1,15 +1,16 @@
 package com.mcpdev.mcpdev.service;
 
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
+
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.JsonRpcRequest;
+import com.mcpdev.mcpdev.request.JsonRpcRequestT;
 import com.mcpdev.mcpdev.response.JsonRpcResponse;
 
 public class JsonRpcService {
@@ -40,6 +41,19 @@ public class JsonRpcService {
         } catch (DatabindException e) {
             _log.warn(e.toString());
             throw new BadRequestException();
+        } catch (Exception e) {
+            _log.warn(e.toString());
+            throw new InternalServerException();
+        }
+    }
+
+    protected <T> T deserializeT(byte[] raw, Class<T> type)
+            throws InternalServerException {
+        try {
+            final var gType = _serializer.getTypeFactory()
+                    .constructParametricType(JsonRpcRequestT.class, type);
+            final JsonRpcRequestT<T> reqT = _serializer.readValue(raw, gType);
+            return reqT.params();
         } catch (Exception e) {
             _log.warn(e.toString());
             throw new InternalServerException();

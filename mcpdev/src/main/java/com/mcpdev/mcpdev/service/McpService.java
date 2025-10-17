@@ -5,16 +5,25 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
-import com.mcpdev.mcpdev.model.Test;
+import com.mcpdev.mcpdev.model.ClientInitialize;
+import com.mcpdev.mcpdev.model.ServerInitialize;
 
 @Service
 public class McpService extends JsonRpcService {
-    private static final String SUPPORTED_MCP = "2025-06-18";
+    public static final String SUPPORTED_MCP = "2025-06-18";
 
     private final ApiService _apiService;
 
     public McpService(ApiService apiService) {
         _apiService = apiService;
+    }
+
+    private void validateMcp(String protocolVersion)
+            throws BadRequestException {
+        if (!protocolVersion.equals(SUPPORTED_MCP)) {
+            _log.warn("unsupported protocol version {}", protocolVersion);
+            throw new BadRequestException();
+        }
     }
 
     @Async
@@ -32,8 +41,15 @@ public class McpService extends JsonRpcService {
 
     @Async
     private CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
-            throws InternalServerException {
-        final var rawRes = serializeResponse(id, , null);
+            throws BadRequestException, InternalServerException {
+
+        final var clientIni = deserializeT(rawReq, ClientInitialize.class);
+        validateMcp(clientIni.protoclVersion());
+        final var info = clientIni.clientInfo();
+        _log.info("initialize {}, {}, {}", info.name(), info.title(), info.version());
+
+        final var serverIni = ServerInitialize.getDefault(SUPPORTED_MCP);
+        final var rawRes = serializeResponse(id, serverIni, null);
         return CompletableFuture.completedFuture(rawRes);
     }
 }

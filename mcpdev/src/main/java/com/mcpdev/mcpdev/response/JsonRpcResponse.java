@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public record JsonRpcResponse<R, E>(
-        @JsonProperty("jsonrpc") String jsonrpc,
-        @JsonProperty("id") long id,
-        @JsonProperty("result") @Nullable @JsonInclude(Include.NON_NULL) R result,
-        @JsonProperty("error") @Nullable @JsonInclude(Include.NON_NULL) E error) {
+        @JsonProperty String jsonrpc,
+        @JsonProperty long id,
+        @JsonProperty @Nullable @JsonInclude(Include.NON_NULL) R result,
+        @JsonProperty @Nullable @JsonInclude(Include.NON_NULL) E error) {
 }
