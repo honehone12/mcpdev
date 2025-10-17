@@ -1,5 +1,6 @@
 package com.mcpdev.mcpdev.control;
 
+import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.mcpdev.mcpdev.error.BadRequestException;
+import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.service.McpService;
 
 @RestController
@@ -22,7 +24,8 @@ public class McpController {
     }
 
     @PostMapping(value = "/mcp", produces = "application/json; charset=utf-8", consumes = "application/json; charset=utf-8")
-    public byte[] handleMcp(@RequestBody byte[] raw) throws Exception {
+    public CompletableFuture<byte[]> handleMcp(@RequestBody byte[] raw)
+            throws BadRequestException, InternalServerException {
         if (raw.length > MAX_PAYLOAD) {
             _log.warn("payload over limit");
             throw new BadRequestException();

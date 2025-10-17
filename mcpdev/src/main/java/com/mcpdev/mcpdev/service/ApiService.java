@@ -1,29 +1,32 @@
 package com.mcpdev.mcpdev.service;
 
+import java.net.URI;
 import java.net.http.HttpClient;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.concurrent.CompletableFuture;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class ApiService {
-    private final Logger _log = LoggerFactory.getLogger(ApiService.class);
-    private final HttpClient _httpClient = HttpClient.newHttpClient();
+    private final HttpClient _httpClient;
     private final String _apiURl;
 
-    public ApiService() {
-        final var apiUrl = System.getenv("API_URL");
-        if (apiUrl != null) {
-            _apiURl = apiUrl;
-        } else {
-            throw new RuntimeException("env for api url is not set");
-        }
+    public ApiService(HttpClient httpClient) {
+        _apiURl = "http://localhost:8080/anime-search";
+        _httpClient = httpClient;
     }
 
-    public JsonNode ApiCall() {
+    @Async
+    public CompletableFuture<byte[]> ApiCall(byte[] json) {
+        final var req = HttpRequest.newBuilder(URI.create(_apiURl))
+                .POST(HttpRequest.BodyPublishers.ofByteArray(json))
+                .header("Content-Type", "application/json; charset=utf-8")
+                .build();
 
+        final var fut = _httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofByteArray())
+                .thenApply(HttpResponse::body);
+        return fut;
     }
 }
