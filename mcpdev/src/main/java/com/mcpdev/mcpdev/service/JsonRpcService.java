@@ -16,11 +16,10 @@ import com.mcpdev.mcpdev.response.JsonRpcResponse;
 public class JsonRpcService {
     protected static final String SUPPORTED_JSON_RPC = "2.0";
 
-    protected final Logger _log = LoggerFactory.getLogger(McpService.class);
-    protected final ObjectMapper _serializer;
+    protected final Logger _log = LoggerFactory.getLogger(this.getClass());
+    protected final ObjectMapper _serializer = new ObjectMapper();
 
     public JsonRpcService() {
-        _serializer = new ObjectMapper();
         _serializer.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
