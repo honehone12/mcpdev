@@ -10,11 +10,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class ApiService {
+    private static final String _apiURl = "http://localhost:8080/anime-search";
     private final HttpClient _httpClient;
-    private final String _apiURl;
 
     public ApiService(HttpClient httpClient) {
-        _apiURl = "http://localhost:8080/anime-search";
         _httpClient = httpClient;
     }
 

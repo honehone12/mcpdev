@@ -1,5 +1,6 @@
 package com.mcpdev.mcpdev.service;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,10 @@ public class McpService extends JsonRpcService {
         switch (req.method()) {
             case "initialize":
                 return handleInitialize(req.id(), raw);
+            case "notifications/initialized":
+                return CompletableFuture.completedFuture(OK);
+            case "tools/list":
+                return handleToolsList(req.id());
             default:
                 _log.warn("unknown method {}", req.method());
                 throw new BadRequestException();
@@ -51,5 +56,9 @@ public class McpService extends JsonRpcService {
         final var serverIni = ServerInitialize.getDefault(SUPPORTED_MCP);
         final var rawRes = serializeResponse(id, serverIni, null);
         return CompletableFuture.completedFuture(rawRes);
+    }
+
+    private CompletableFuture<byte[]> handleToolsList(long id) {
+
     }
 }
