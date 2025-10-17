@@ -12,10 +12,12 @@ public class Tools {
 						new Tool.InputSchema(
 								"object",
 								Map.of(
-										"keywords",
-										new Tool.Property(
+										"keywords", new Tool.Property(
 												"string",
-												"keywords for text search")),
+												"keywords for text search"),
+										"itemType", new Tool.Property(
+												"string",
+												"item type for search; all|anime|character|trailer")),
 								new String[] { "keywords" })),
 				new Tool(
 						"vectorSearch",
@@ -24,10 +26,12 @@ public class Tools {
 						new Tool.InputSchema(
 								"object",
 								Map.of(
-										"id",
-										new Tool.Property(
+										"id", new Tool.Property(
 												"string",
-												"id for vector search")),
+												"id for vector search"),
+										"itemType", new Tool.Property(
+												"string",
+												"item type for search; anime|character")),
 								new String[] { "id" }))
 		};
 	}

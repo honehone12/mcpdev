@@ -47,7 +47,6 @@ public class McpService extends JsonRpcService {
     @Async
     private CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
             throws BadRequestException, InternalServerException {
-
         final var clientIni = deserializeT(rawReq, ClientInitialize.class);
         validateMcp(clientIni.protoclVersion());
         final var info = clientIni.clientInfo();
