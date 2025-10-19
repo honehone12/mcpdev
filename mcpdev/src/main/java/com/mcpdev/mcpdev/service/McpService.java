@@ -55,7 +55,7 @@ public class McpService extends JsonRpcService {
             throw new BadRequestException();
         }
 
-        validateMcp(clientIni.protoclVersion());
+        validateMcp(clientIni.protocolVersion());
         final var info = clientIni.clientInfo();
         if (info == null) {
             throw new BadRequestException();
