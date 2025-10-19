@@ -29,7 +29,7 @@ public class McpController {
     private CompletableFuture<ResponseEntity<byte[]>> wrapFuture(CompletableFuture<byte[]> fut)
             throws BadRequestException, InternalServerException {
         return fut.thenApply((raw) -> ResponseEntity.status(HttpStatus.OK)
-                .header("MCP-Protocol-Version", McpService.SUPPORTED_MCP)
+                .header("MCP-Protocol-Version", _mcpService.supportedMcp())
                 .body(raw));
     }
 
