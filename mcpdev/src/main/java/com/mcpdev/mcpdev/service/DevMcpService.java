@@ -10,7 +10,7 @@ import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.Call;
 import com.mcpdev.mcpdev.request.ClientInitialize;
 import com.mcpdev.mcpdev.response.ServerInitialize;
-import com.mcpdev.mcpdev.response.Tools;
+import com.mcpdev.mcpdev.response.Tool;
 import com.mcpdev.mcpdev.response.Result;
 
 @Service
@@ -79,7 +79,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
     @Async
     CompletableFuture<byte[]> handleToolsList(long id)
             throws InternalServerException {
-        final var tools = Tools.getDefault();
+        final var tools = Tool.getDefaultTools();
         final var rawRes = serializeResponse(id, tools, null);
         return CompletableFuture.completedFuture(rawRes);
     }
