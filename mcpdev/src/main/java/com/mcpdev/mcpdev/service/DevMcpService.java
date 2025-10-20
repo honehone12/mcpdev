@@ -3,6 +3,8 @@ package com.mcpdev.mcpdev.service;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.Call;
@@ -91,6 +93,15 @@ public class DevMcpService extends JsonRpcService implements McpService {
         final var query = call.arguments();
         if (query == null) {
             throw new BadRequestException();
+        }
+
+        try {
+            final var raw = _serializer.writeValueAsBytes(query);
+            return _apiService.callApi(raw);
+
+        } catch (JsonProcessingException e) {
+            _log.error(e.toString());
+            throw new InternalServerException();
         }
     }
 }
