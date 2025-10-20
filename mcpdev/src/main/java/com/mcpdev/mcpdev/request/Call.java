@@ -1,6 +1,6 @@
 package com.mcpdev.mcpdev.request;
 
 public record Call(
-        String name,
-        Query arguments) {
+		String name,
+		Arguments arguments) {
 }

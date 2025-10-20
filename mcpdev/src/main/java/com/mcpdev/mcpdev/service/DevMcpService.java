@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.Call;
+import com.mcpdev.mcpdev.request.Query;
 import com.mcpdev.mcpdev.request.ClientInitialize;
 import com.mcpdev.mcpdev.response.ServerInitialize;
 import com.mcpdev.mcpdev.response.Tool;
@@ -107,14 +108,18 @@ public class DevMcpService extends JsonRpcService implements McpService {
             throw new BadRequestException();
         }
 
-        final var query = call.arguments();
-        if (query == null) {
+        final var args = call.arguments();
+        if (args == null) {
             throw new BadRequestException();
         }
 
         try {
-            final var raw = _serializer.writeValueAsBytes(query);
-            final var res = _apiService.callApi(raw);
+            final var query = new Query(
+                    Query.functionId(call.name()),
+                    Query.itemType(args.itemType()),
+                    args.id(),
+                    args.keywords());
+            final var res = _apiService.callApi(_serializer.writeValueAsBytes(query));
             return res.thenApply((s) -> serializeResult(s, id));
         } catch (JsonProcessingException e) {
             _log.error(e.toString());
