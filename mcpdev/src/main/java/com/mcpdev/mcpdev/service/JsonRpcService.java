@@ -1,7 +1,6 @@
 package com.mcpdev.mcpdev.service;
 
 import java.nio.charset.StandardCharsets;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
@@ -75,7 +74,6 @@ public class JsonRpcService {
                     id,
                     result,
                     error);
-
             final var rawRes = _serializer.writeValueAsBytes(res);
             return rawRes;
         } catch (Exception e) {

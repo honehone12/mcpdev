@@ -1,7 +1,6 @@
 package com.mcpdev.mcpdev.service;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,21 +84,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
         return CompletableFuture.completedFuture(rawRes);
     }
 
-    byte[] serializeResult(String apiRes, long id)
-            throws CompletionException {
-        try {
-            final var result = new Result<Result.Text>(
-                    new Result.Text[] {
-                            Result.text(apiRes)
-                    },
-                    false);
-            return serializeResponse(id, result, null);
-        } catch (Exception e) {
-            _log.error(e.toString());
-            throw new CompletionException(new InternalServerException());
-        }
-    }
-
     @Async
     CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
             throws BadRequestException, InternalServerException {
@@ -119,8 +103,15 @@ public class DevMcpService extends JsonRpcService implements McpService {
                     Query.convIType(args.itemType()),
                     args.id(),
                     args.keywords());
-            final var res = _apiService.callApi(_serializer.writeValueAsBytes(query));
-            return res.thenApply((s) -> serializeResult(s, id));
+            final var reqBody = _serializer.writeValueAsBytes(query);
+            final var res = _apiService.callApiUnwrapped(reqBody);
+            final var result = new Result<Result.Text>(
+                    new Result.Text[] {
+                            Result.text(res)
+                    },
+                    false);
+            final var resBody = serializeResponse(id, result, null);
+            return CompletableFuture.completedFuture(resBody);
         } catch (JsonProcessingException e) {
             _log.error(e.toString());
             throw new InternalServerException();
