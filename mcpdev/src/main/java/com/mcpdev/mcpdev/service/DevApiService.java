@@ -18,13 +18,13 @@ public class DevApiService implements ApiService {
     }
 
     @Async
-    public CompletableFuture<byte[]> callApi(byte[] json) {
+    public CompletableFuture<String> callApi(byte[] json) {
         final var req = HttpRequest.newBuilder(URI.create(_apiURl))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(json))
                 .header("Content-Type", "application/json; charset=utf-8")
                 .build();
 
-        final var fut = _httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofByteArray())
+        final var fut = _httpClient.sendAsync(req, HttpResponse.BodyHandlers.ofString())
                 .thenApply(HttpResponse::body);
         return fut;
     }

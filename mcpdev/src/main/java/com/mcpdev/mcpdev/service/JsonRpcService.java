@@ -27,7 +27,7 @@ public class JsonRpcService {
         _serializer.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     }
 
-    private void validateJsonRpc(JsonRpcRequest req)
+    void validateJsonRpc(JsonRpcRequest req)
             throws BadRequestException {
         if (!SUPPORTED_JSON_RPC.equals(req.jsonrpc())) {
             _log.warn("unsupported jsonrpc {}", req.jsonrpc());

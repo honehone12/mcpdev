@@ -1,9 +1,9 @@
 package com.mcpdev.mcpdev.service;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
@@ -11,6 +11,7 @@ import com.mcpdev.mcpdev.request.Call;
 import com.mcpdev.mcpdev.request.ClientInitialize;
 import com.mcpdev.mcpdev.response.ServerInitialize;
 import com.mcpdev.mcpdev.response.Tools;
+import com.mcpdev.mcpdev.response.Result;
 
 @Service
 public class DevMcpService extends JsonRpcService implements McpService {
@@ -26,9 +27,9 @@ public class DevMcpService extends JsonRpcService implements McpService {
         return SUPPORTED_JSON_RPC;
     }
 
-    private void validateMcp(String protocolVersion)
+    void validateMcp(String protocolVersion)
             throws BadRequestException {
-        if (!SUPPORTED_MCP.equals(protocolVersion)) {
+        if (protocolVersion == null || !SUPPORTED_MCP.equals(protocolVersion)) {
             _log.warn("unsupported protocol version {}", protocolVersion);
             throw new BadRequestException();
         }
@@ -54,7 +55,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
     }
 
     @Async
-    private CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
+    CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
             throws BadRequestException, InternalServerException {
         final var clientIni = deserializeT(rawReq, ClientInitialize.class);
         if (clientIni == null) {
@@ -66,6 +67,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
         if (info == null) {
             throw new BadRequestException();
         }
+
         // all those properties can be null actually
         _log.info("[initialize] {}, {}, {}", info.name(), info.title(), info.version());
 
@@ -75,15 +77,30 @@ public class DevMcpService extends JsonRpcService implements McpService {
     }
 
     @Async
-    private CompletableFuture<byte[]> handleToolsList(long id)
+    CompletableFuture<byte[]> handleToolsList(long id)
             throws InternalServerException {
         final var tools = Tools.getDefault();
         final var rawRes = serializeResponse(id, tools, null);
         return CompletableFuture.completedFuture(rawRes);
     }
 
+    byte[] serializeResult(String apiRes, long id)
+            throws CompletionException {
+        try {
+            final var result = new Result<Result.Text>(
+                    new Result.Text[] {
+                            Result.text(apiRes)
+                    },
+                    false);
+            return serializeResponse(id, result, null);
+        } catch (Exception e) {
+            _log.error(e.toString());
+            throw new CompletionException(new InternalServerException());
+        }
+    }
+
     @Async
-    private CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
+    CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
             throws BadRequestException, InternalServerException {
         final var call = deserializeT(rawReq, Call.class);
         if (call == null) {
@@ -97,8 +114,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
         try {
             final var raw = _serializer.writeValueAsBytes(query);
-            return _apiService.callApi(raw);
-
+            final var res = _apiService.callApi(raw);
+            return res.thenApply((s) -> serializeResult(s, id));
         } catch (JsonProcessingException e) {
             _log.error(e.toString());
             throw new InternalServerException();
