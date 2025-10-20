@@ -115,8 +115,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
         try {
             final var query = new Query(
-                    Query.functionId(call.name()),
-                    Query.itemType(args.itemType()),
+                    Query.convFId(call.name()),
+                    Query.convIType(args.itemType()),
                     args.id(),
                     args.keywords());
             final var res = _apiService.callApi(_serializer.writeValueAsBytes(query));

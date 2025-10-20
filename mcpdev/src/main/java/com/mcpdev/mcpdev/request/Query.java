@@ -12,27 +12,20 @@ public record Query(
         @JsonProperty("item_type") @JsonInclude(Include.NON_DEFAULT) int itemType,
         @JsonProperty("id") @Nullable @JsonInclude(Include.NON_EMPTY) String id,
         @JsonProperty("keywords") @Nullable @JsonInclude(Include.NON_EMPTY) String keywords) {
-    public static int functionId(String funcName)
+    public static int convFId(String funcName)
             throws BadRequestException {
-        switch (funcName) {
-            case "textSearch":
-                return 3;
-            case "vectorSearch":
-                return 4;
-            default:
-                throw new BadRequestException();
-        }
+        return switch (funcName) {
+            case "textSearch" -> 3;
+            case "vectorSearch" -> 4;
+            case null, default -> throw new BadRequestException();
+        };
     }
 
-    public static int itemType(String itemType)
-            throws BadRequestException {
-        switch (itemType) {
-            case "anime":
-                return 1;
-            case "character":
-                return 2;
-            default:
-                throw new BadRequestException();
-        }
+    public static int convIType(String itemType) {
+        return switch (itemType) {
+            case "anime" -> 1;
+            case "character" -> 2;
+            case null, default -> 0;
+        };
     }
 }
