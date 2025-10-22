@@ -2,7 +2,6 @@ package com.mcpdev.mcpdev.control;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -29,8 +28,9 @@ public class McpController {
     }
 
     @Async
-    @PostMapping(value = "/mcp", produces = "application/json; charset=utf-8", consumes = "application/json; charset=utf-8")
-    public CompletableFuture<ResponseEntity<byte[]>> handleMcp(@RequestBody byte[] raw)
+    @PostMapping(value = "/mcp", consumes = "application/json; charset=utf-8")
+    public CompletableFuture<ResponseEntity<byte[]>> handleMcp(
+            @RequestBody byte[] raw)
             throws BadRequestException, InternalServerException {
         if (raw.length > MAX_PAYLOAD) {
             _log.warn("payload over limit");
@@ -43,6 +43,7 @@ public class McpController {
             return CompletableFuture.completedFuture(
                     ResponseEntity.status(HttpStatus.OK)
                             .header("MCP-Protocol-Version", _mcpService.supportedMcp())
+                            .header("Content-Type", "application/json; charset=utf-8")
                             .body(body));
         } catch (InterruptedException | ExecutionException e) {
             throw new InternalServerException();
