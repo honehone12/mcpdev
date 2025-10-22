@@ -1,9 +1,14 @@
 package com.mcpdev.mcpdev.service;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.Call;
@@ -37,8 +42,12 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
     @Async
     public CompletableFuture<byte[]> handle(byte[] raw)
-            throws BadRequestException, InternalServerException {
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            InterruptedException, ExecutionException,
+            BadRequestException, InternalServerException {
         final var req = deserializeRequest(raw);
+        validateJsonRpc(req);
         switch (req.method()) {
             case "initialize":
                 return handleInitialize(req.id(), raw);
@@ -56,7 +65,9 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
     @Async
     CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
-            throws BadRequestException, InternalServerException {
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            BadRequestException {
         final var clientIni = deserializeT(rawReq, ClientInitialize.class);
         if (clientIni == null) {
             throw new BadRequestException();
@@ -78,7 +89,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
     @Async
     CompletableFuture<byte[]> handleToolsList(long id)
-            throws InternalServerException {
+            throws JsonProcessingException {
         final var tools = Tool.getDefaultTools();
         final var rawRes = serializeResponse(id, tools, null);
         return CompletableFuture.completedFuture(rawRes);
@@ -86,7 +97,10 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
     @Async
     CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
-            throws BadRequestException, InternalServerException {
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            InterruptedException, ExecutionException,
+            BadRequestException, InternalServerException {
         final var call = deserializeT(rawReq, Call.class);
         if (call == null) {
             throw new BadRequestException();
@@ -97,24 +111,21 @@ public class DevMcpService extends JsonRpcService implements McpService {
             throw new BadRequestException();
         }
 
-        try {
-            final var query = new Query(
-                    Query.convFId(call.name()),
-                    Query.convIType(args.itemType()),
-                    args.id(),
-                    args.keywords());
-            final var reqBody = _serializer.writeValueAsBytes(query);
-            final var res = _apiService.callApiUnwrapped(reqBody);
-            final var result = new Result<Result.Text>(
-                    new Result.Text[] {
-                            Result.text(res)
-                    },
-                    false);
-            final var resBody = serializeResponse(id, result, null);
-            return CompletableFuture.completedFuture(resBody);
-        } catch (JsonProcessingException e) {
-            _log.error(e.toString());
-            throw new InternalServerException();
-        }
+        final var query = new Query(
+                Query.convFId(call.name()),
+                Query.convIType(args.itemType()),
+                args.id(),
+                args.keywords());
+        final var reqBody = _serializer.writeValueAsBytes(query);
+        final var fut = _apiService.callApi(reqBody);
+
+        final var res = fut.get();
+        final var result = new Result<Result.Text>(
+                new Result.Text[] {
+                        Result.text(res)
+                },
+                false);
+        final var resBody = serializeResponse(id, result, null);
+        return CompletableFuture.completedFuture(resBody);
     }
 }

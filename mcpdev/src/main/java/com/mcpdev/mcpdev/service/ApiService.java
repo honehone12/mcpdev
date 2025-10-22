@@ -6,7 +6,7 @@ import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 
 public interface ApiService {
-    CompletableFuture<String> callBufferedApi(byte[] body)
+    CompletableFuture<String> callApi(byte[] body)
             throws InterruptedException, ExecutionException,
             BadRequestException, InternalServerException;
 }

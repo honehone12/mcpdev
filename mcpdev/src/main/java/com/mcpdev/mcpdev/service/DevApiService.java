@@ -22,7 +22,7 @@ public class DevApiService implements ApiService {
     }
 
     @Async
-    public CompletableFuture<String> callBufferedApi(byte[] body)
+    public CompletableFuture<String> callApi(byte[] body)
             throws InterruptedException, ExecutionException,
             BadRequestException, InternalServerException {
         final var url = URI.create(_apiURl + "/anime-search");

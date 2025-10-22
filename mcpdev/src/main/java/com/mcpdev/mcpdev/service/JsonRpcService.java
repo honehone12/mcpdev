@@ -1,15 +1,17 @@
 package com.mcpdev.mcpdev.service;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mcpdev.mcpdev.error.BadRequestException;
-import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.JsonRpcRequest;
 import com.mcpdev.mcpdev.request.JsonRpcRequestT;
 import com.mcpdev.mcpdev.response.JsonRpcResponse;
@@ -26,7 +28,7 @@ public class JsonRpcService {
         _serializer.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     }
 
-    void validateJsonRpc(JsonRpcRequest req)
+    protected void validateJsonRpc(JsonRpcRequest req)
             throws BadRequestException {
         if (!SUPPORTED_JSON_RPC.equals(req.jsonrpc())) {
             _log.warn("unsupported jsonrpc {}", req.jsonrpc());
@@ -35,31 +37,18 @@ public class JsonRpcService {
     }
 
     protected JsonRpcRequest deserializeRequest(byte[] raw)
-            throws BadRequestException, InternalServerException {
-        try {
-            final var req = _serializer.readValue(raw, JsonRpcRequest.class);
-            validateJsonRpc(req);
-            return req;
-        } catch (DatabindException e) {
-            _log.warn(e.toString());
-            throw new BadRequestException();
-        } catch (Exception e) {
-            _log.warn(e.toString());
-            throw new InternalServerException();
-        }
+            throws IOException, StreamReadException,
+            DatabindException, BadRequestException {
+        final var req = _serializer.readValue(raw, JsonRpcRequest.class);
+        return req;
     }
 
     protected <T> T deserializeT(byte[] raw, Class<T> type)
-            throws InternalServerException {
-        try {
-            final var gType = _serializer.getTypeFactory()
-                    .constructParametricType(JsonRpcRequestT.class, type);
-            final JsonRpcRequestT<T> reqT = _serializer.readValue(raw, gType);
-            return reqT.params();
-        } catch (Exception e) {
-            _log.warn(e.toString());
-            throw new InternalServerException();
-        }
+            throws IOException, StreamReadException, DatabindException {
+        final var gType = _serializer.getTypeFactory()
+                .constructParametricType(JsonRpcRequestT.class, type);
+        final JsonRpcRequestT<T> reqT = _serializer.readValue(raw, gType);
+        return reqT.params();
     }
 
     protected byte[] Ok() {
@@ -67,18 +56,13 @@ public class JsonRpcService {
     }
 
     protected <R, E> byte[] serializeResponse(long id, R result, @Nullable E error)
-            throws InternalServerException {
-        try {
-            final var res = new JsonRpcResponse<>(
-                    SUPPORTED_JSON_RPC,
-                    id,
-                    result,
-                    error);
-            final var rawRes = _serializer.writeValueAsBytes(res);
-            return rawRes;
-        } catch (Exception e) {
-            _log.warn(e.toString());
-            throw new InternalServerException();
-        }
+            throws JsonProcessingException {
+        final var res = new JsonRpcResponse<>(
+                SUPPORTED_JSON_RPC,
+                id,
+                result,
+                error);
+        final var rawRes = _serializer.writeValueAsBytes(res);
+        return rawRes;
     }
 }

@@ -1,5 +1,6 @@
 package com.mcpdev.mcpdev.control;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
@@ -11,6 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.service.McpService;
@@ -45,7 +49,17 @@ public class McpController {
                             .header("MCP-Protocol-Version", _mcpService.supportedMcp())
                             .header("Content-Type", "application/json; charset=utf-8")
                             .body(body));
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (DatabindException | StreamReadException inputE) {
+            _log.warn(inputE.toString());
+            throw new BadRequestException();
+        } catch (JsonProcessingException jsonE) {
+            _log.error(jsonE.toString());
+            throw new InternalServerException();
+        } catch (IOException ioE) {
+            _log.error(ioE.toString());
+            throw new InternalServerException();
+        } catch (InterruptedException | ExecutionException rtE) {
+            _log.error(rtE.toString());
             throw new InternalServerException();
         }
     }
