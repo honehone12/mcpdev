@@ -1,6 +1,8 @@
 package com.mcpdev.mcpdev.control;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -26,13 +28,6 @@ public class McpController {
         _mcpService = mcpService;
     }
 
-    private CompletableFuture<ResponseEntity<byte[]>> wrapFuture(CompletableFuture<byte[]> fut)
-            throws BadRequestException, InternalServerException {
-        return fut.thenApply((raw) -> ResponseEntity.status(HttpStatus.OK)
-                .header("MCP-Protocol-Version", _mcpService.supportedMcp())
-                .body(raw));
-    }
-
     @Async
     @PostMapping(value = "/mcp", produces = "application/json; charset=utf-8", consumes = "application/json; charset=utf-8")
     public CompletableFuture<ResponseEntity<byte[]>> handleMcp(@RequestBody byte[] raw)
@@ -42,6 +37,15 @@ public class McpController {
             throw new BadRequestException();
         }
 
-        return wrapFuture(_mcpService.handle(raw));
+        try {
+            final var fut = _mcpService.handle(raw);
+            final var body = fut.get();
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.OK)
+                            .header("MCP-Protocol-Version", _mcpService.supportedMcp())
+                            .body(body));
+        } catch (InterruptedException | ExecutionException e) {
+            throw new InternalServerException();
+        }
     }
 }
