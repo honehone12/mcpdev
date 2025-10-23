@@ -1,13 +1,12 @@
 package com.mcpdev.mcpdev.service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,8 +66,7 @@ class JsonRpcServiceTest {
     void testSerializeResponse() throws com.fasterxml.jackson.core.JsonProcessingException {
         long id = 1L;
         String result = "testResult";
-        byte[] rawResponse = jsonRpcService.serializeResponse(id, result, null);
-        String jsonResponse = new String(rawResponse, StandardCharsets.UTF_8);
+        String jsonResponse = jsonRpcService.serializeResponse(id, result, null);
         String expected = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"testResult\"}";
         assertEquals(expected, jsonResponse);
     }
@@ -77,14 +75,14 @@ class JsonRpcServiceTest {
     void testSerializeResponse_withError() throws com.fasterxml.jackson.core.JsonProcessingException {
         long id = 1L;
         String error = "testError";
-        byte[] rawResponse = jsonRpcService.serializeResponse(id, null, error);
-        String jsonResponse = new String(rawResponse, StandardCharsets.UTF_8);
+        String jsonResponse = jsonRpcService.serializeResponse(id, null, error);
         String expected = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"testError\"}";
         assertEquals(expected, jsonResponse);
     }
 
     // Helper class for testing deserializeT
     static class TestParams {
+
         public String param1;
     }
 }

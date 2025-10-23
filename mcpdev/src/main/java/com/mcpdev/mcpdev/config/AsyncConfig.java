@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
+
     @Bean
     public Executor taskExecutor() {
         return Executors.newVirtualThreadPerTaskExecutor();
