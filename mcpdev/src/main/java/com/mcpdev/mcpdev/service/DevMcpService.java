@@ -19,6 +19,7 @@ import com.mcpdev.mcpdev.response.Result;
 
 @Service
 public class DevMcpService extends JsonRpcService implements McpService {
+
     private static final String SUPPORTED_MCP = "2025-06-18";
 
     private final ApiService _apiService;
@@ -27,6 +28,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
         _apiService = apiService;
     }
 
+    @Override
     public String supportedMcp() {
         return SUPPORTED_JSON_RPC;
     }
@@ -40,6 +42,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
     }
 
     @Async
+    @Override
     public CompletableFuture<byte[]> handle(byte[] raw)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
@@ -47,19 +50,20 @@ public class DevMcpService extends JsonRpcService implements McpService {
             BadRequestException, InternalServerException {
         final var req = deserializeRequest(raw);
         validateJsonRpc(req);
-        switch (req.method()) {
-            case "initialize":
-                return handleInitialize(req.id(), raw);
-            case "notifications/initialized":
-                return CompletableFuture.completedFuture(Ok());
-            case "tools/list":
-                return handleToolsList(req.id());
-            case "tools/call":
-                return handleToolsCall(req.id(), raw);
-            default:
+        return switch (req.method()) {
+            case "initialize" ->
+                handleInitialize(req.id(), raw);
+            case "notifications/initialized" ->
+                CompletableFuture.completedFuture(Ok());
+            case "tools/list" ->
+                handleToolsList(req.id());
+            case "tools/call" ->
+                handleToolsCall(req.id(), raw);
+            default -> {
                 _log.warn("unknown method {}", req.method());
                 throw new BadRequestException();
-        }
+            }
+        };
     }
 
     @Async
@@ -120,8 +124,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
         final var res = fut.get();
         final var result = new Result<Result.Text>(
-                new Result.Text[] {
-                        Result.text(res)
+                new Result.Text[]{
+                    Result.text(res)
                 },
                 false);
         final var resBody = serializeResponse(id, result, null);
