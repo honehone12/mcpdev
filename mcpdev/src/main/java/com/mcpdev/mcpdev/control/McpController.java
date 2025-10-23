@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
@@ -46,6 +47,36 @@ public class McpController {
 
         try {
             final var fut = _mcpService.handle(raw);
+            final var body = fut.get();
+            return CompletableFuture.completedFuture(
+                    ResponseEntity.status(HttpStatus.OK)
+                            .header("MCP-Protocol-Version", _mcpService.supportedMcp())
+                            .header("Content-Type", "application/json; charset=utf-8")
+                            .body(body));
+        } catch (DatabindException | StreamReadException inputE) {
+            _log.warn(inputE.toString());
+            throw new BadRequestException();
+        } catch (JsonProcessingException jsonE) {
+            _log.error(jsonE.toString());
+            throw new InternalServerException();
+        } catch (IOException | InterruptedException | ExecutionException ioE) {
+            _log.error(ioE.toString());
+            throw new InternalServerException();
+        }
+    }
+
+    @Async
+    @PostMapping(value = "/mcp/stream", consumes = "application/json; charset=utf-8")
+    public CompletableFuture<ResponseEntity<StreamingResponseBody>> streamMcp(
+            @RequestBody byte[] raw)
+            throws BadRequestException, InternalServerException {
+        if (raw.length > MAX_PAYLOAD) {
+            _log.warn("payload over limit");
+            throw new BadRequestException();
+        }
+
+        try {
+            final var fut = _mcpService.stream(raw);
             final var body = fut.get();
             return CompletableFuture.completedFuture(
                     ResponseEntity.status(HttpStatus.OK)

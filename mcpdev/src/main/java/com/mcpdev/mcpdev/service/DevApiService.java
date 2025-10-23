@@ -46,7 +46,7 @@ public class DevApiService implements ApiService {
     }
 
     @Async
-    <T> CompletableFuture<T> internalCall(
+    <T> CompletableFuture<T> httpCall(
             HttpResponse.BodyHandler<T> handler,
             URI url,
             byte[] body
@@ -68,7 +68,7 @@ public class DevApiService implements ApiService {
             BadRequestException, InternalServerException {
         final var url = URI.create(API_URL + "/anime-search");
         final var handler = HttpResponse.BodyHandlers.ofString();
-        return internalCall(handler, url, body);
+        return httpCall(handler, url, body);
     }
 
     @Async
@@ -78,6 +78,6 @@ public class DevApiService implements ApiService {
             BadRequestException, InternalServerException {
         final var url = URI.create(API_URL + "/anime-search/stream");
         final var handler = HttpResponse.BodyHandlers.ofInputStream();
-        return internalCall(handler, url, body);
+        return httpCall(handler, url, body);
     }
 }

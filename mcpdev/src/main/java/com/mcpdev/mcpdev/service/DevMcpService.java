@@ -1,21 +1,26 @@
 package com.mcpdev.mcpdev.service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.mcpdev.mcpdev.error.BadRequestException;
 import com.mcpdev.mcpdev.error.InternalServerException;
 import com.mcpdev.mcpdev.request.Call;
-import com.mcpdev.mcpdev.request.Query;
 import com.mcpdev.mcpdev.request.ClientInitialize;
+import com.mcpdev.mcpdev.request.Query;
+import com.mcpdev.mcpdev.response.Result;
 import com.mcpdev.mcpdev.response.ServerInitialize;
 import com.mcpdev.mcpdev.response.Tool;
-import com.mcpdev.mcpdev.response.Result;
 
 @Service
 public class DevMcpService extends JsonRpcService implements McpService {
@@ -67,7 +72,36 @@ public class DevMcpService extends JsonRpcService implements McpService {
     }
 
     @Async
-    CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
+    @Override
+    public CompletableFuture<StreamingResponseBody> stream(byte[] raw)
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            InterruptedException, ExecutionException,
+            BadRequestException, InternalServerException {
+        final var req = deserializeRequest(raw);
+        validateJsonRpc(req);
+        return switch (req.method()) {
+            case "initialize" ->
+                streamInitialize(req.id(), raw);
+            case "notifications/initialized" ->
+                CompletableFuture.completedFuture((s) -> {
+                    try (s) {
+                        s.write(Ok());
+                        s.flush();
+                    }
+                });
+            case "tools/list" ->
+                streamToolsList(req.id());
+            case "tools/call" ->
+                streamToolsCall(req.id(), raw);
+            default -> {
+                _log.warn("unknown method {}", req.method());
+                throw new BadRequestException();
+            }
+        };
+    }
+
+    byte[] initializeImpl(long id, byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
             BadRequestException {
@@ -86,8 +120,30 @@ public class DevMcpService extends JsonRpcService implements McpService {
         _log.info("[initialize] {}, {}, {}", info.name(), info.title(), info.version());
 
         final var serverIni = ServerInitialize.getDefault(SUPPORTED_MCP);
-        final var rawRes = serializeResponse(id, serverIni, null);
+        return serializeResponse(id, serverIni, null);
+    }
+
+    @Async
+    CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            BadRequestException {
+        final var rawRes = initializeImpl(id, rawReq);
         return CompletableFuture.completedFuture(rawRes);
+    }
+
+    @Async
+    CompletableFuture<StreamingResponseBody> streamInitialize(long id, byte[] rawReq)
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            BadRequestException {
+        final var rawRes = initializeImpl(id, rawReq);
+        return CompletableFuture.completedFuture((s) -> {
+            try (s) {
+                s.write(rawRes);
+                s.flush();
+            }
+        });
     }
 
     @Async
@@ -99,11 +155,23 @@ public class DevMcpService extends JsonRpcService implements McpService {
     }
 
     @Async
-    CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
+    CompletableFuture<StreamingResponseBody> streamToolsList(long id)
+            throws JsonProcessingException {
+        final var tools = Tool.getDefaultTools();
+        final var rawRes = serializeResponse(id, tools, null);
+        return CompletableFuture.completedFuture((s) -> {
+            try (s) {
+                s.write(rawRes);
+                s.flush();
+            }
+        });
+    }
+
+    byte[] buildRequestBody(byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
             InterruptedException, ExecutionException,
-            BadRequestException, InternalServerException {
+            BadRequestException {
         final var call = deserializeT(rawReq, Call.class);
         if (call == null) {
             throw new BadRequestException();
@@ -119,16 +187,52 @@ public class DevMcpService extends JsonRpcService implements McpService {
                 Query.convIType(args.itemType()),
                 args.id(),
                 args.keywords());
-        final var reqBody = _serializer.writeValueAsBytes(query);
+        return _serializer.writeValueAsBytes(query);
+    }
+
+    @Async
+    CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            InterruptedException, ExecutionException,
+            BadRequestException, InternalServerException {
+        final var reqBody = buildRequestBody(rawReq);
         final var fut = _apiService.callApi(reqBody);
 
         final var res = fut.get();
-        final var result = new Result<Result.Text>(
-                new Result.Text[]{
-                    Result.text(res)
-                },
+        final var result = new Result<>(
+                new Result.Text[]{Result.text(res)},
                 false);
         final var resBody = serializeResponse(id, result, null);
         return CompletableFuture.completedFuture(resBody);
+    }
+
+    @Async
+    CompletableFuture<StreamingResponseBody> streamToolsCall(long id, byte[] rawReq)
+            throws IOException, StreamReadException,
+            DatabindException, JsonProcessingException,
+            InterruptedException, ExecutionException,
+            BadRequestException, InternalServerException {
+        final var reqBody = buildRequestBody(rawReq);
+        final var fut = _apiService.callStreamingApi(reqBody);
+        final var stream = fut.get();
+        return CompletableFuture.completedFuture((s) -> {
+            try (s) {
+                final var buf = new BufferedReader(new InputStreamReader(stream));
+                while (true) {
+                    final var ln = buf.readLine();
+                    if (ln == null) {
+                        break;
+                    }
+
+                    final var result = new Result<>(
+                            new Result.Text[]{Result.text(ln)},
+                            false);
+                    final var resBody = serializeResponse(id, result, null);
+                    s.write(resBody);
+                    s.flush();
+                }
+            }
+        });
     }
 }
