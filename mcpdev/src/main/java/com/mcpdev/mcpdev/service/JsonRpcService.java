@@ -2,10 +2,12 @@ package com.mcpdev.mcpdev.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
@@ -18,6 +20,7 @@ import com.mcpdev.mcpdev.response.JsonRpcResponse;
 
 @Service
 public class JsonRpcService {
+
     protected static final String SUPPORTED_JSON_RPC = "2.0";
 
     protected final Logger _log = LoggerFactory.getLogger(this.getClass());
@@ -55,14 +58,13 @@ public class JsonRpcService {
         return "{\"jsonrpc\": \"2.0\"}".getBytes(StandardCharsets.UTF_8);
     }
 
-    protected <R, E> byte[] serializeResponse(long id, R result, @Nullable E error)
+    protected <R, E> String serializeResponse(long id, R result, @Nullable E error)
             throws JsonProcessingException {
         final var res = new JsonRpcResponse<>(
                 SUPPORTED_JSON_RPC,
                 id,
                 result,
                 error);
-        final var rawRes = _serializer.writeValueAsBytes(res);
-        return rawRes;
+        return _serializer.writeValueAsString(res);
     }
 }

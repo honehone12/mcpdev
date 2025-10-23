@@ -3,6 +3,7 @@ package com.mcpdev.mcpdev.service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -120,7 +121,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
         _log.info("[initialize] {}, {}, {}", info.name(), info.title(), info.version());
 
         final var serverIni = ServerInitialize.getDefault(SUPPORTED_MCP);
-        return serializeResponse(id, serverIni, null);
+        return serializeResponse(id, serverIni, null)
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     @Async
@@ -150,7 +152,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
     CompletableFuture<byte[]> handleToolsList(long id)
             throws JsonProcessingException {
         final var tools = Tool.getDefaultTools();
-        final var rawRes = serializeResponse(id, tools, null);
+        final var rawRes = serializeResponse(id, tools, null)
+                .getBytes(StandardCharsets.UTF_8);
         return CompletableFuture.completedFuture(rawRes);
     }
 
@@ -158,7 +161,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
     CompletableFuture<StreamingResponseBody> streamToolsList(long id)
             throws JsonProcessingException {
         final var tools = Tool.getDefaultTools();
-        final var rawRes = serializeResponse(id, tools, null);
+        final var rawRes = serializeResponse(id, tools, null)
+                .getBytes(StandardCharsets.UTF_8);
         return CompletableFuture.completedFuture((s) -> {
             try (s) {
                 s.write(rawRes);
@@ -203,7 +207,8 @@ public class DevMcpService extends JsonRpcService implements McpService {
         final var result = new Result<>(
                 new Result.Text[]{Result.text(res)},
                 false);
-        final var resBody = serializeResponse(id, result, null);
+        final var resBody = serializeResponse(id, result, null)
+                .getBytes(StandardCharsets.UTF_8);
         return CompletableFuture.completedFuture(resBody);
     }
 
@@ -229,7 +234,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
                             new Result.Text[]{Result.text(ln)},
                             false);
                     final var resBody = serializeResponse(id, result, null);
-                    s.write(resBody);
+                    s.write((resBody + "\n").getBytes(StandardCharsets.UTF_8));
                     s.flush();
                 }
             }
