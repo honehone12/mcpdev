@@ -1,0 +1,13 @@
+{
+    "jsonrpc": "2.0",
+    "id": 0,
+    "method": "initialize",
+    "params": {
+        "protoclVersion": "2025-06-18",
+        "clientInfo": {
+            "name": "tester",
+            "title": "test mcp client",
+            "version": "0.0.1"
+        }
+    }
+}
