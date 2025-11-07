@@ -38,6 +38,7 @@ public class DevApiServiceTest {
         requestBody = "test body".getBytes();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void callApi_whenSuccess_shouldReturnResponseBody() throws Exception {
         // Arrange
@@ -55,6 +56,7 @@ public class DevApiServiceTest {
         assertEquals(expectedResponse, actualResponse);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void callApi_whenServerError_shouldThrowBadRequestException() throws Exception {
         // Arrange
@@ -68,6 +70,7 @@ public class DevApiServiceTest {
         });
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void callApi_whenOtherError_shouldThrowInternalServerException() throws Exception {
         // Arrange
