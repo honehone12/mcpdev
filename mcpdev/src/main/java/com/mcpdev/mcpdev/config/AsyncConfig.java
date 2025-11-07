@@ -1,10 +1,9 @@
 package com.mcpdev.mcpdev.config;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.core.task.VirtualThreadTaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @Configuration
@@ -12,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class AsyncConfig {
 
     @Bean
-    public Executor taskExecutor() {
-        return Executors.newVirtualThreadPerTaskExecutor();
+    TaskExecutor taskExecutor() {
+        return new VirtualThreadTaskExecutor();
     }
 }
