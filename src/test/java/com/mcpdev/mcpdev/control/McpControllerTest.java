@@ -28,6 +28,7 @@ public class McpControllerTest {
     @MockitoBean
     private McpService mcpService;
 
+    @SuppressWarnings("null")
     @Test
     public void testHandleMcp_Success() throws Exception {
         byte[] requestBody = "{\"jsonrpc\":\"2.0\",\"method\":\"initialize\",\"id\":1}".getBytes();
@@ -48,6 +49,7 @@ public class McpControllerTest {
                 .andExpect(content().bytes(responseBody));
     }
 
+    @SuppressWarnings("null")
     @Test
     public void testHandleMcp_PayloadTooLarge() throws Exception {
         byte[] requestBody = new byte[4097];
