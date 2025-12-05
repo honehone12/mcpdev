@@ -125,7 +125,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
                 .getBytes(StandardCharsets.UTF_8);
     }
 
-    @Async
     CompletableFuture<byte[]> handleInitialize(long id, byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
@@ -134,7 +133,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
         return CompletableFuture.completedFuture(rawRes);
     }
 
-    @Async
     CompletableFuture<StreamingResponseBody> streamInitialize(long id, byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
@@ -148,7 +146,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
         });
     }
 
-    @Async
     CompletableFuture<byte[]> handleToolsList(long id)
             throws JsonProcessingException {
         final var tools = Tool.getDefaultTools();
@@ -157,7 +154,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
         return CompletableFuture.completedFuture(rawRes);
     }
 
-    @Async
     CompletableFuture<StreamingResponseBody> streamToolsList(long id)
             throws JsonProcessingException {
         final var tools = Tool.getDefaultTools();
@@ -194,7 +190,6 @@ public class DevMcpService extends JsonRpcService implements McpService {
         return _serializer.writeValueAsBytes(query);
     }
 
-    @Async
     CompletableFuture<byte[]> handleToolsCall(long id, byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
@@ -205,14 +200,13 @@ public class DevMcpService extends JsonRpcService implements McpService {
 
         final var res = fut.get();
         final var result = new Result<>(
-                new Result.Text[]{Result.text(res)},
+                new Result.Text[] { Result.text(res) },
                 false);
         final var resBody = serializeResponse(id, result, null)
                 .getBytes(StandardCharsets.UTF_8);
         return CompletableFuture.completedFuture(resBody);
     }
 
-    @Async
     CompletableFuture<StreamingResponseBody> streamToolsCall(long id, byte[] rawReq)
             throws IOException, StreamReadException,
             DatabindException, JsonProcessingException,
@@ -231,7 +225,7 @@ public class DevMcpService extends JsonRpcService implements McpService {
                     }
 
                     final var result = new Result<>(
-                            new Result.Text[]{Result.text(ln)},
+                            new Result.Text[] { Result.text(ln) },
                             false);
                     final var resBody = serializeResponse(id, result, null);
                     s.write((resBody + "\n").getBytes(StandardCharsets.UTF_8));

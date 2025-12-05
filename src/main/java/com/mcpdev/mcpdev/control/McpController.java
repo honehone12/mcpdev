@@ -35,7 +35,6 @@ public class McpController {
         _mcpService = mcpService;
     }
 
-    @Async
     @PostMapping(value = "/mcp", consumes = "application/json; charset=utf-8")
     public CompletableFuture<ResponseEntity<byte[]>> handleMcp(
             @RequestBody byte[] raw)

@@ -45,13 +45,10 @@ public class DevApiService implements ApiService {
         };
     }
 
-    @Async
     <T> CompletableFuture<T> httpCall(
             HttpResponse.BodyHandler<T> handler,
             URI url,
-            byte[] body
-    ) throws
-            InterruptedException, ExecutionException,
+            byte[] body) throws InterruptedException, ExecutionException,
             BadRequestException, InternalServerException {
         final var req = buildRequest(url, body);
         final var fut = _httpClient.sendAsync(req, handler);
